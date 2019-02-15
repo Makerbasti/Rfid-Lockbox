@@ -1,0 +1,46 @@
+const express = require('express')
+const app = express()
+const port = 1448
+
+let boxPermissions={
+  buechseDerPandora:["666","1337"],
+  schatztruhe:["1234"],
+  rfidLockBox:["1234567890abcdef","1"],
+}
+
+
+let checkPermission = function(box,token){
+  if(boxPermissions[box]){
+    console.log("Trying "+token+" on ",box,boxPermissions[box],boxPermissions[box].indexOf(token));
+    if(boxPermissions[box].indexOf(token) != -1)
+    {
+      console.log("Key was good");
+      return true;
+    }
+  }
+  return false;
+}
+
+app.use(function (req, res, next) {
+  console.log('Time: %d', Date.now());
+  console.log(req.originalUrl);
+  next();
+});
+
+app.get('/', (req, res) => res.send('Hello World!'))
+
+// das ist für die BOX
+app.get('/permission/:tokenID/on/:boxID', (req, res) => {
+  // Parameter aus dem Get Request in Variablen kopieren
+  let tokenID = req.params.tokenID || "";
+  let boxID = req.params.boxID || "";
+  let permission = checkPermission(boxID, tokenID);
+  console.log("Permission for "+boxID+" on Token "+tokenID+" was ",permission?"granted.":"denied.");
+  if(permission){
+    res.send("OK - "+boxID);
+  }else {
+    res.status(401).send("Die Box '"+boxID+"' bleibt zu!");
+  }
+})
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`))
